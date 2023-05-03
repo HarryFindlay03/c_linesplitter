@@ -19,6 +19,8 @@ int main()
     WORD* words = get_words(file_name);
     write_to_file(file_name, words);
 
+    printf("FILE SPLIT SUCCESSFULLY! 🕺🕺\n\n\n");
+
     return 0;
 }
 
@@ -59,22 +61,25 @@ WORD* get_words(char* file_name)
 
 void write_to_file(char* file_name, WORD* words)
 {
+    int i, counter, condition;
     FILE* fp;
     char ext[] = "_SPLIT\0";
     char final_ext[] = ".txt\0";
-    
+
     /* Changing filename */
     char* ptr = file_name;
+    char* ptr_ext;
+
     while(*ptr != '.')
         ptr++;
 
-    char* ptr_ext;
     for(ptr_ext = ext; *ptr_ext;)
         *ptr++ = *ptr_ext++;
     
     for(ptr_ext = final_ext; *ptr_ext;)
         *ptr++ = *ptr_ext++; 
-
+    
+    /* attempting to open file */
     if((fp = fopen(file_name, "w")) == NULL)
     {
         printf("There has been an error with the file name !\nPLEASE EXIT AND TRY AGAIN!\n\n");
@@ -82,34 +87,54 @@ void write_to_file(char* file_name, WORD* words)
     }
 
     /* main loop */
-    int counter = 0;
+    counter = 0;
+    fputs(words->word, fp);
     while(words->nextWord != NULL)
     {
-        counter++;
+        words = words->nextWord;
         fputs(words->word, fp);
 
-        if(counter == 9)
+        condition = 0;
+        counter++;
+
+        if(counter == 9 && !condition)
         {
             fputc('\n', fp);
             counter = 0;
-            words = words->nextWord;
+            condition = 1;
             continue;
         }
-        
+
+        /* checking word does not have a full stop */
+        char* word_ptr;
+        for(word_ptr = words->word; *word_ptr; word_ptr++)
+        {
+            if(condition)
+                break;
+
+            if(*word_ptr == '.')
+            {
+                fputc('\n', fp);
+                counter = 0;
+                condition = 1;
+                break;
+            }
+        }
+                
         /* checking words is not in SPLIT list */
-        int i;
         for(i = 0; i < g_NUM_SPLIT; i++)
         {
+            if(condition)
+                break;
+
             if((!(strcmp(words->word, g_SPLIT[i]))) && (counter > 5))
             {
                 fputc('\n', fp);
                 counter = 0;
-                words = words->nextWord;
+                condition = 1;
                 break;
             }
         }
-
-        words = words->nextWord;
     }
 
     fclose(fp);
