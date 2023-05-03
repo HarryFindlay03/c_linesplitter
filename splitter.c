@@ -1,5 +1,8 @@
 #include "splitter.h"
 
+int g_NUM_SPLIT = 11;
+char* g_SPLIT[] = {"et", "nec", "sed", "tamen", "at", "sic", "ut", "cum", "vel", "iam", "ergo"};
+
 int main()
 {
     char file_name[255];
@@ -14,8 +17,7 @@ int main()
     printf("\n\n\n");
 
     WORD* words = get_words(file_name);
-    print_words(words);
-    write_to_file(file_name);
+    write_to_file(file_name, words);
 
     return 0;
 }
@@ -55,7 +57,7 @@ WORD* get_words(char* file_name)
     return words;
 }
 
-void write_to_file(char* file_name)
+void write_to_file(char* file_name, WORD* words)
 {
     FILE* fp;
     char ext[] = "_SPLIT\0";
@@ -78,7 +80,38 @@ void write_to_file(char* file_name)
         printf("There has been an error with the file name !\nPLEASE EXIT AND TRY AGAIN!\n\n");
         exit(-1);
     }
-    
+
+    /* main loop */
+    int counter = 0;
+    while(words->nextWord != NULL)
+    {
+        counter++;
+        fputs(words->word, fp);
+
+        if(counter == 9)
+        {
+            fputc('\n', fp);
+            counter = 0;
+            words = words->nextWord;
+            continue;
+        }
+        
+        /* checking words is not in SPLIT list */
+        int i;
+        for(i = 0; i < g_NUM_SPLIT; i++)
+        {
+            if((!(strcmp(words->word, g_SPLIT[i]))) && (counter > 5))
+            {
+                fputc('\n', fp);
+                counter = 0;
+                words = words->nextWord;
+                break;
+            }
+        }
+
+        words = words->nextWord;
+    }
+
     fclose(fp);
     return;
 }
@@ -93,7 +126,7 @@ void word_append(WORD** head, char* data)
             exit(-1);
         }
 
-        if(!((*head)->word = (char*)malloc(sizeof(strlen(data)))))
+        if(!((*head)->word = (char*)malloc(sizeof(strlen(data) + 1))))
         {
             printf("Memory allocation failed!");
             exit(-1);
@@ -111,13 +144,14 @@ void word_append(WORD** head, char* data)
         exit(-1);
     }
     
-    if(!(newWord->word = (char*)malloc(sizeof(strlen(data)))))
+    if(!(newWord->word = (char*)malloc(sizeof(strlen(data) + 1))))
     {
         printf("Memory allocation failed!");
         exit(-1);
     }
-
+    
     strcpy(newWord->word, data);
+    strcat(newWord->word, " ");
     
     WORD* temp = *head;
     while(temp->nextWord != NULL)

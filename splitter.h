@@ -9,7 +9,7 @@ typedef struct word_t
 } WORD;
 
 WORD* get_words(char*);
-void write_to_file(char*);
+void write_to_file(char*, WORD*);
 
 void word_append(WORD**, char*);
 void print_words(WORD*);
